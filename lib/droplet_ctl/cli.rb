@@ -28,6 +28,7 @@ module DropletCtl
       when 'create' then perform_droplet_create_action
       when 'destroy' then perform_droplet_destroy_action
       when 'rename' then perform_droplet_rename_action
+      when 'ips' then perform_droplet_ips_action
       when nil then abort("No action specified\n#{option_parser.to_s}")
       else abort("Invalid action #{options[:action]}\n#{option_parser.to_s}")
       end
@@ -95,6 +96,14 @@ module DropletCtl
       )
       exit unless gets =~ /^y/i
       droplet.trigger('rename', name: options[:name])
+    end
+
+    def perform_droplet_ips_action
+      abort_with_error("No droplet specified") unless options[:droplet]
+      droplet = Droplet.find_by(name: options[:droplet])
+      droplet.info['networks'][options[:ipv6] ? 'v6' : 'v4'].each do |network|
+        puts network['ip_address']
+      end
     end
 
     def perform_snapshot_create_action
@@ -166,7 +175,7 @@ module DropletCtl
 
     def option_parser
       @option_parser ||= begin
-        valid_actions = %w(list create rename destroy)
+        valid_actions = %w(list create rename destroy ips)
         valid_targets = %w(droplet snapshot)
         OptionParser.new do |parser|
           parser.banner = "Usage: droplet-ctl <options...>"
