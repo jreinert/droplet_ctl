@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['mail@jreinert.com']
 
   spec.summary       = 'A command line utility for a few digitalocean API tasks'
-  spec.homepage      = 'https://git.jreinert.com/jreinert/droplet_ctl'
+  spec.homepage      = 'https://github.com/jreinert/droplet_ctl'
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)\/})
