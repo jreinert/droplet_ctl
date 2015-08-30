@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require 'droplet_ctl'
+DropletCtl.run
