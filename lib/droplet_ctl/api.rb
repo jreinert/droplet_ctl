@@ -29,9 +29,11 @@ module DropletCtl
 
       def handle_request(request_class, endpoint, params = nil)
         path = path_for(endpoint, request_class, params)
-        request = request_class.new(path)
-        body = params && request_class != Net::HTTP::Get ? params.to_json : nil
-        request.content_type = 'application/json' if body
+        request = request_class.new(path.to_s)
+        if params && request_class != Net::HTTP::Get
+          request.body = params.to_json
+          request.content_type = 'application/json'
+        end
         response = api_request(request)
         unless response.is_a?(Net::HTTPSuccess)
           fail Error.new("#{request_class} request to #{endpoint} failed", request, response)
