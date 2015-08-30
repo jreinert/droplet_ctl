@@ -231,8 +231,7 @@ module DropletCtl
           end
 
           parser.separator("\nEnvironment variables:")
-
-          parser.on('DIGITAL_OCEAN_API_TOKEN', 'your api token') {}
+          parser.separator('DIGITAL_OCEAN_API_TOKEN - your api token')
 
           parser.separator(<<EOF
  
