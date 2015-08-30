@@ -171,6 +171,15 @@ module DropletCtl
         OptionParser.new do |parser|
           parser.banner = "Usage: droplet-ctl <options...>"
           parser.separator("\nAvailable options:")
+
+          parser.on(
+            '-h', '--help',
+            'show this message'
+          ) do
+            puts params.to_s
+            exit
+          end
+
           parser.on(
             '-a', '--action ACTION',
             "action to perform. one of (#{valid_actions.join('|')})"
