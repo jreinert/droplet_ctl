@@ -4,7 +4,7 @@ require 'droplet_ctl/action'
 module DropletCtl
   module Actions
     def trigger(action_type, params = {})
-      response = post_request(
+      response = API.post_request(
         "#{path}/actions",
         { type: action_type }.merge(params)
       )
