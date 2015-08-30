@@ -7,12 +7,6 @@ module DropletCtl
 
     API_ROOT = URI('https://api.digitalocean.com/')
     API_VERSION = 'v2'
-    EXPECTED_STATUS_CODES = {
-      Net::HTTP::Get => 200,
-      Net::HTTP::Put => 200,
-      Net::HTTP::Post => 201,
-      Net::HTTP::Delete => 204
-    }
 
     class << self
       def get_request(endpoint, params = nil)
@@ -39,8 +33,8 @@ module DropletCtl
         body = params && request_class != Net::HTTP::Get ? params.to_json : nil
         request.content_type = 'application/json' if body
         response = api_request(request)
-        unless response.status_code == EXPECTED_STATUS_CODES[request_class]
-          fail Error, "#{method} request to #{endpoint} failed", request, response
+        unless response.is_a?(Net::HTTPSuccess)
+          fail Error.new("#{request_class} request to #{endpoint} failed", request, response)
         end
 
         JSON.parse(response.body)
