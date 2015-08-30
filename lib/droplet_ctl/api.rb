@@ -56,10 +56,10 @@ module DropletCtl
       def api_request(request)
         sleep 1 # be polite
         request['Authorization'] = "Bearer #{TOKEN}"
-        HTTP::Client.new(
-          API_ROOT.host, API_ROOT.port, ssl: API_ROOT.scheme == 'https'
+        Net::HTTP.start(
+          API_ROOT.host, API_ROOT.port, use_ssl: API_ROOT.scheme == 'https'
         ) do |client|
-          client.exec(request)
+          client.request(request)
         end
       end
     end
