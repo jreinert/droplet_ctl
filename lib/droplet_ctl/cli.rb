@@ -261,7 +261,7 @@ $ droplet-ctl -a destroy -t droplet -d 'my droplet'
 $ droplet-ctl -a create -t snapshot -d 'my droplet' -n 'my new snapshot'
 
 # Restore a droplet from a snapshot:
-$ droplet-ctl -a create -t droplet -n 'my droplet' -s 512mb -6 -r nyc3 -s 'my snapshot
+$ droplet-ctl -a create -t droplet -n 'my droplet' --size 512mb -6 -r nyc3 -s 'my snapshot'
 
 # Update a snapshot:
 $ droplet-ctl -a rename -t snapshot -s 'my snapshot' -n 'my snapshot backup'
