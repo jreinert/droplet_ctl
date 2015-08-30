@@ -69,14 +69,11 @@ module DropletCtl
 
   class API::Error < RuntimeError
     def initialize(message, request, response)
-      uri = URI(API_ROOT.to_s)
-      uri.path = request.uri.path
-      uri.query = request.uri.query
       super(
-        "#{message}\n" \
-        "\tRequest URI: #{uri}\n" \
-        "\tRequest: #{request.inspect}\n" \
-        "\tResponse: #{response.inspect}\n" \
+        "#{message} (#{response.class})\n" \
+        "\tRequest Path: #{request.path}\n" \
+        "\tRequest Body: #{request.body}\n" \
+        "\tResponse Body: #{response.body}\n" \
       )
     end
   end
