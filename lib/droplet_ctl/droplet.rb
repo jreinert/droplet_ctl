@@ -35,7 +35,7 @@ module DropletCtl
     end
 
     def self.create(name, region, size, image, options)
-      response = post_request(
+      response = API.post_request(
         path,
         {
           name: name,
