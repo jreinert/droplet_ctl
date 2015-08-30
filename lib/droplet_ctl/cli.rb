@@ -14,7 +14,6 @@ module DropletCtl
 
     def perform_action
       option_parser.parse!
-      puts options
       case options[:target]
       when 'droplet' then perform_droplet_action
       when 'snapshot' then perform_snapshot_action
@@ -45,16 +44,21 @@ module DropletCtl
       end
     end
 
+    def create_options
+      {
+        ipv6: options[:ipv6],
+        backups: options[:backups],
+        private_networking: options[:private_networking]
+      }
+    end
+
     def perform_droplet_create_action
       %i(name size region snapshot).each do |option|
         abort_with_error("No #{option} specified") unless options[option]
       end
       snapshot = Image.find_by({ name: options[:snapshot] }, private: true)
       abort("No snapshot found for name #{options[:snapshot]}") unless snapshot
-      create_options[:ipv6] = options[:ipv6]
-      create_options[:backups] = options[:backups]
-      create_options[:private_networking] = [:private_networking]
-      puts(new_droplet_message(create_options))
+      puts(new_droplet_message(snapshot))
       exit unless gets =~ /^y/i
 
       action = Droplet.create(
@@ -90,7 +94,7 @@ module DropletCtl
         'Sounds good? (y/N)'
       )
       exit unless gets =~ /^y/i
-      droplet.update(name: options[:name])
+      droplet.trigger('rename', name: options[:name])
     end
 
     def perform_snapshot_create_action
@@ -144,7 +148,17 @@ module DropletCtl
 
     def perform_droplet_list_action
       Droplet.all.each do |droplet|
-        puts("id: #{droplet['id']}, name: #{droplet['name']}, status: #{droplet['status']}")
+        addresses = {}
+        droplet['networks'].each do |version, items|
+          addresses[version] = items.map { |item| item['ip_address'] }
+        end
+        puts(
+          "id: #{droplet['id']}, "\
+          "name: #{droplet['name']}, "\
+          "status: #{droplet['status']}, "\
+          "ipv4: #{addresses['v4']}, "\
+          "ipv6: #{addresses['v6']}"
+        )
       end
     end
 
@@ -155,7 +169,7 @@ module DropletCtl
         valid_actions = %w(list create rename destroy)
         valid_targets = %w(droplet snapshot)
         OptionParser.new do |parser|
-          parser.banner = "Usage: #{$PROGRAM_NAME} <options...>"
+          parser.banner = "Usage: droplet-ctl <options...>"
           parser.separator("\nAvailable options:")
           parser.on(
             '-a', '--action ACTION',
@@ -200,12 +214,12 @@ module DropletCtl
 
           parser.separator("\ndroplet target only:")
 
-          parser.on('-s', '--size SIZE', 'size for the new droplet') do |size|
+          parser.on('--size SIZE', 'size for the new droplet') do |size|
             @options[:size] = size
           end
 
           parser.on('-r', '--region REGION', 'region for the new droplet') do |region|
-            @options[:size] = region
+            @options[:region] = region
           end
 
           parser.on('-6', '--ipv6', 'set up ipv6 network') do
@@ -216,25 +230,26 @@ module DropletCtl
             @options[:private_networking] = true
           end
 
-          parser.separator('\nEnvironment variables:')
+          parser.separator("\nEnvironment variables:")
 
           parser.on('DIGITAL_OCEAN_API_TOKEN', 'your api token') {}
 
           parser.separator(<<EOF
-\nExamples:
+ 
+Examples:
 # Destroy a droplet:
-$ #{$PROGRAM_NAME} -a destroy -t droplet -d 'my droplet'
+$ droplet-ctl -a destroy -t droplet -d 'my droplet'
 
 # Create a snapshot:
-$ #{$PROGRAM_NAME} -a create -t snapshot -d 'my droplet' -n 'my new snapshot'
+$ droplet-ctl -a create -t snapshot -d 'my droplet' -n 'my new snapshot'
 
 # Restore a droplet from a snapshot:
-$ #{$PROGRAM_NAME} -a create -t droplet -n 'my droplet' -s 512mb -6 -r nyc3 -s 'my snapshot
+$ droplet-ctl -a create -t droplet -n 'my droplet' -s 512mb -6 -r nyc3 -s 'my snapshot
 
 # Update a snapshot:
-$ #{$PROGRAM_NAME} -a rename -t snapshot -s 'my snapshot' -n 'my snapshot backup'
-$ #{$PROGRAM_NAME} -a create -t snapshot -d 'my droplet' -n 'my snapshot'
-$ #{$PROGRAM_NAME} -a destroy -t snapshot -s 'my snapshot backup'
+$ droplet-ctl -a rename -t snapshot -s 'my snapshot' -n 'my snapshot backup'
+$ droplet-ctl -a create -t snapshot -d 'my droplet' -n 'my snapshot' -w
+$ droplet-ctl -a destroy -t snapshot -s 'my snapshot backup'
 EOF
           )
         end
@@ -247,16 +262,16 @@ EOF
       abort("#{message}\n#{option_parser}")
     end
 
-    def new_droplet_message(create_options)
+    def new_droplet_message(snapshot)
       <<EOF
 This will create a new droplet with the following configuration
 name: #{options[:name]}
 size: #{options[:size]}
 region: #{options[:region]}
 image: #{snapshot.id} (#{snapshot.name})
-ipv6: #{create_options[:ipv6]}
-backups: #{create_options[:backups]}
-private_networking: #{create_options[:private_networking]}
+ipv6: #{create_options[:ipv6] == true}
+backups: #{create_options[:backups] == true}
+private_networking: #{create_options[:private_networking] == true}
 
 Sounds good? (y/N)
 EOF
