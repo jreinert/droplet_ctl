@@ -39,7 +39,7 @@ module DropletCtl
           fail Error.new("#{request_class} request to #{endpoint} failed", request, response)
         end
 
-        JSON.parse(response.body)
+        JSON.parse(response.body) if response.body
       end
 
       def path_for(endpoint, request_class, params)
